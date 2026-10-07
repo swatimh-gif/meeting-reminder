@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeetFlow — Reminder Center</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f6f7fb;color:#181922}
+button,input,select{font:inherit}
+.app{min-height:100vh;display:flex}
+.sidebar{width:235px;background:#11131a;color:#fff;padding:24px 16px;position:fixed;inset:0 auto 0 0}
+.brand{display:flex;gap:10px;align-items:center;padding:5px 8px 30px}
+.logo{width:38px;height:38px;border-radius:11px;background:#655be8;display:grid;place-items:center;font-weight:800;font-size:18px}
+.brand b{display:block}.brand small{color:#999ba6;font-size:10px}
+.nav{display:block;width:100%;border:0;background:transparent;color:#a8aab5;text-align:left;padding:11px 12px;border-radius:9px;margin:4px 0;cursor:pointer}
+.nav.active,.nav:hover{background:#242631;color:#fff}
+.sidebar-note{position:absolute;bottom:25px;left:16px;right:16px;background:#1d2028;border:1px solid #30333d;border-radius:12px;padding:14px;font-size:11px}
+.sidebar-note p{color:#9b9da8;line-height:1.5;margin:6px 0 0}
+.main{margin-left:235px;width:calc(100% - 235px);padding:32px 38px;max-width:1500px}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.eyebrow{font-size:10px;letter-spacing:1.4px;color:#665de5;font-weight:800}
+h1{font-size:28px;margin:5px 0}.header p{margin:0;color:#858792;font-size:13px}
+.workspace{display:flex;align-items:center;gap:9px;font-size:11px}.avatar{width:35px;height:35px;border-radius:50%;background:#ebe9ff;color:#5e55d8;display:grid;place-items:center;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:18px}
+.stat,.panel{background:#fff;border:1px solid #e7e8ee;border-radius:14px;box-shadow:0 2px 8px #11131a0a}
+.stat{padding:17px}.stat label{font-size:9px;color:#90919a;font-weight:800;letter-spacing:.7px}.stat strong{display:block;font-size:20px;margin-top:8px}.stat small{color:#999aa3;font-size:10px}
+.green{color:#249761}
+.grid{display:grid;grid-template-columns:1.45fr 1fr;gap:18px}
+.panel{padding:20px}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.panel h2{font-size:15px;margin:0 0 4px}.panel-head p{font-size:10px;color:#90919b;margin:0}
+.badge{font-size:9px;background:#f0efff;color:#6158dc;border-radius:20px;padding:6px 9px;font-weight:800}
+.meeting{width:100%;border:1px solid #ededf2;background:#fff;border-radius:11px;padding:13px;display:grid;grid-template-columns:75px 1fr auto;gap:12px;align-items:center;text-align:left;margin-bottom:9px;cursor:pointer}
+.meeting:hover,.meeting.selected{border-color:#c8c4ff;background:#faf9ff}
+.time{font-size:12px;font-weight:800}.time small{display:block;color:#999aa3;font-size:9px;font-weight:500;margin-top:4px}
+.meeting-main b{font-size:12px}.meeting-main span,.meeting-main small{display:block;font-size:10px;color:#777984;margin-top:3px}.meeting-main small{font-size:9px;color:#a0a1aa}
+.status{font-size:8px;font-weight:800;padding:5px 8px;border-radius:20px}.accepted{background:#eaf8f0;color:#268a59}.pending{background:#fff5df;color:#a87514}
+.label{display:block;font-size:10px;font-weight:800;color:#555762;margin:17px 0 7px}
+select,.custom input{width:100%;border:1px solid #dedfe6;border-radius:9px;background:#fff;padding:10px;font-size:11px}
+.custom{display:grid;grid-template-columns:1fr 1.5fr auto;gap:7px;margin-top:8px}
+.custom button{border:0;border-radius:9px;background:#6259e4;color:#fff;padding:0 12px;font-size:10px;font-weight:800;cursor:pointer}
+.channels{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.channel{border:1px solid #e8e8ee;border-radius:10px;padding:10px;background:#fbfbfd;display:flex;align-items:center;gap:8px;cursor:pointer}
+.channel input{accent-color:#6259e4}.channel-icon{width:25px;height:25px;border-radius:7px;background:#eeecff;color:#6259df;display:grid;place-items:center;font-size:10px;font-weight:800}
+.channel b{display:block;font-size:10px}.channel small{display:block;color:#999aa3;font-size:8px;margin-top:2px}
+.info{display:flex;gap:9px;background:#f7f7fc;border-radius:10px;padding:11px;margin-top:14px}.info b{font-size:10px}.info p{margin:3px 0 0;font-size:9px;color:#8b8c96}
+.details{margin-top:18px}.details-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.detail{border:1px solid #ededf1;border-radius:10px;padding:13px}.detail label{font-size:8px;color:#9a9ba4;font-weight:800}.detail b{display:block;font-size:11px;margin-top:7px}.detail small{display:block;color:#999aa3;font-size:8px;margin-top:3px}
+footer{text-align:center;color:#a1a2ab;font-size:9px;padding:24px 0}
+.toast{position:fixed;right:20px;bottom:20px;background:#181a22;color:#fff;padding:11px 14px;border-radius:9px;font-size:10px;opacity:0;transition:.2s}.toast.show{opacity:1}
+@media(max-width:1000px){.stats{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr}.details-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.app{display:block}.sidebar{position:static;width:100%;padding:13px 15px}.sidebar nav,.sidebar-note{display:none}.brand{padding:0}.main{margin:0;width:100%;padding:22px 14px}.workspace{display:none}.header{margin-bottom:18px}h1{font-size:23px}.stats{grid-template-columns:1fr 1fr;gap:8px}.stat{padding:13px}.stat strong{font-size:16px}.grid{gap:12px}.panel{padding:15px}.meeting{grid-template-columns:65px 1fr}.meeting .status{grid-column:2;justify-self:start}.channels{grid-template-columns:1fr}.details-grid{grid-template-columns:1fr}.custom{grid-template-columns:1fr 1fr}.custom input{grid-column:1/-1}.custom button{padding:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">M</div><div><b>MeetFlow</b><small>Smart reminders</small></div></div>
+  <nav>
+    <button class="nav active">Overview</button>
+    <button class="nav">Meetings</button>
+    <button class="nav">Reminder Settings</button>
+  </nav>
+  <div class="sidebar-note"><b>Reminder Center</b><p>Keep every participant informed at the right time.</p></div>
+</aside>
+
+<main class="main">
+<header class="header">
+  <div><span class="eyebrow">MEETING MANAGEMENT</span><h1>Reminder Center</h1><p>Manage upcoming meeting reminders in one place.</p></div>
+  <div class="workspace"><div class="avatar">S</div><div><b>Workspace</b><div class="green">Active</div></div></div>
+</header>
+
+<section class="stats">
+ <div class="stat"><label>UPCOMING MEETINGS</label><strong>3</strong><small>Scheduled</small></div>
+ <div class="stat"><label>NEXT MEETING</label><strong id="nextTime">10:30 AM</strong><small id="nextTitle">Team Meeting</small></div>
+ <div class="stat"><label>NEXT REMINDER</label><strong id="nextReminder">15 min</strong><small>Before meeting</small></div>
+ <div class="stat"><label>STATUS</label><strong class="green">Active</strong><small>Reminder service</small></div>
+</section>
+
+<section class="grid">
+<div class="panel">
+ <div class="panel-head"><div><h2>Upcoming meetings</h2><p>Mock meeting data for prototype demonstration</p></div><span class="badge">3 scheduled</span></div>
+ <div id="meetingList"></div>
+</div>
+
+<div class="panel">
+ <div class="panel-head"><div><h2>Reminder preferences</h2><p>Choose when and where participants are reminded</p></div></div>
+ <label class="label">Reminder timing</label>
+ <select id="timing">
+  <option value="5">5 minutes before</option>
+  <option value="10">10 minutes before</option>
+  <option value="15" selected>15 minutes before</option>
+  <option value="30">30 minutes before</option>
+  <option value="60">1 hour before</option>
+  <option value="1440">1 day before</option>
+ </select>
+ <div class="custom">
+  <input id="customValue" type="number" min="1" placeholder="Custom time">
+  <select id="customUnit"><option value="minutes">minutes before</option><option value="hours">hours before</option><option value="days">days before</option></select>
+  <button onclick="applyCustom()">Apply</button>
+ </div>
+
+ <label class="label">Notification channels</label>
+ <div class="channels">
+  <label class="channel"><input type="checkbox" checked><span class="channel-icon">W</span><div><b>WhatsApp</b><small>Instant message</small></div></label>
+  <label class="channel"><input type="checkbox" checked><span class="channel-icon">S</span><div><b>SMS</b><small>Text reminder</small></div></label>
+  <label class="channel"><input type="checkbox" checked><span class="channel-icon">@</span><div><b>Email</b><small>Email reminder</small></div></label>
+  <label class="channel"><input type="checkbox" checked><span class="channel-icon">G</span><div><b>Google Calendar</b><small>Calendar alert</small></div></label>
+ </div>
+ <div class="info"><b>✓</b><div><b>Flexible reminder timing</b><p>15 minutes is the default. You can select a different timing whenever required.</p></div></div>
+</div>
+</section>
+
+<section class="panel details">
+ <div class="panel-head"><div><h2>Meeting & participant details</h2><p>Information displayed from mock scheduled-meeting data</p></div><span id="selectedStatus" class="status accepted">Accepted</span></div>
+ <div id="details" class="details-grid"></div>
+</section>
+<footer>MeetFlow · Booking is handled by the separate scheduling module · Prototype uses mock data only</footer>
+</main>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const meetings=[
+ {id:1,title:"Team Meeting",purpose:"Weekly project sync",date:"Today",time:"10:30 AM",participant:"Anika Sharma",phone:"+91 98765 43210",email:"anika@example.com",status:"Accepted"},
+ {id:2,title:"Project Discussion",purpose:"Discuss development progress",date:"Today",time:"2:00 PM",participant:"Rahul Mehta",phone:"+91 91234 56789",email:"rahul@example.com",status:"Accepted"},
+ {id:3,title:"Client Demo",purpose:"Product demonstration",date:"Today",time:"4:30 PM",participant:"Priya Nair",phone:"+91 99887 66554",email:"priya@example.com",status:"Pending"}
+];
+let selected=meetings[0], reminder=15;
+
+function render(){
+ document.getElementById("meetingList").innerHTML=meetings.map(m=>`
+ <button class="meeting ${m.id===selected.id?"selected":""}" onclick="selectMeeting(${m.id})">
+   <div class="time">${m.time}<small>${m.date}</small></div>
+   <div class="meeting-main"><b>${m.title}</b><span>${m.purpose}</span><small>${m.participant} · ${m.phone}</small></div>
+   <span class="status ${m.status.toLowerCase()}">${m.status}</span>
+ </button>`).join("");
+ document.getElementById("details").innerHTML=`
+ <div class="detail"><label>MEETING</label><b>${selected.title}</b><small>${selected.date} · ${selected.time}</small></div>
+ <div class="detail"><label>PURPOSE</label><b>${selected.purpose}</b><small>Meeting purpose</small></div>
+ <div class="detail"><label>PARTICIPANT</label><b>${selected.participant}</b><small>Scheduled participant</small></div>
+ <div class="detail"><label>PHONE NUMBER</label><b>${selected.phone}</b><small>Reminder contact</small></div>
+ <div class="detail"><label>EMAIL</label><b>${selected.email}</b><small>Email contact</small></div>
+ <div class="detail"><label>REMINDER</label><b>${format(reminder)}</b><small>Selected timing</small></div>`;
+ document.getElementById("selectedStatus").textContent=selected.status;
+ document.getElementById("selectedStatus").className="status "+selected.status.toLowerCase();
+}
+function selectMeeting(id){selected=meetings.find(m=>m.id===id);render()}
+function format(v){if(v<60)return v+" minutes before";if(v===60)return"1 hour before";if(v%1440===0)return(v/1440)+" day"+(v/1440>1?"s":"")+" before";return(v/60)+" hours before"}
+function setReminder(v){reminder=Number(v);document.getElementById("nextReminder").textContent=reminder<60?reminder+" min":(reminder/60)+" hr";render();toast("Reminder set to "+format(reminder))}
+document.getElementById("timing").onchange=e=>setReminder(e.target.value);
+function applyCustom(){const n=Number(document.getElementById("customValue").value),u=document.getElementById("customUnit").value;if(!n||n<1){toast("Enter a valid custom time");return}setReminder(u==="minutes"?n:u==="hours"?n*60:n*1440)}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2000)}
+render();
+</script>
+</body>
+</html>
