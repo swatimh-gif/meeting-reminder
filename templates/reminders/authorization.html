@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}Meeting Authorization{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200">
+        <div>
+            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Meeting Authorization</h1>
+            <p class="text-xs text-slate-500 mt-0.5">
+                Review and authorize meeting timing. Accepted meetings proceed to reminder scheduling; rejected meetings cancel reminders.
+            </p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                {{ nav_pending_count }} Pending Approval
+            </span>
+        </div>
+    </div>
+
+    <!-- Timing Authorization Protocol Guidelines Card -->
+    <div class="p-4 rounded-xl bg-slate-900 text-white shadow-2xs space-y-2">
+        <div class="flex items-center space-x-2 text-xs font-semibold text-brand-300">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Timing Authorization Rules</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
+            <div class="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                <span class="font-bold text-amber-400 block mb-0.5">Pending</span>
+                <span class="text-slate-300 text-[11px] leading-relaxed">Wait for a decision. Reminders must <strong>not</strong> trigger or be scheduled.</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                <span class="font-bold text-emerald-400 block mb-0.5">Accepted</span>
+                <span class="text-slate-300 text-[11px] leading-relaxed">Allows reminder scheduling. Triggers automated background reminders.</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                <span class="font-bold text-rose-400 block mb-0.5">Rejected</span>
+                <span class="text-slate-300 text-[11px] leading-relaxed">Must <strong>not</strong> send reminders. Any scheduled reminders are cancelled immediately.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Toolbar -->
+    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <!-- Status Tabs -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0">
+            <a href="?status=PENDING{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap {% if status_filter == 'PENDING' %}bg-amber-500 text-white{% else %}text-amber-800 bg-amber-50 hover:bg-amber-100{% endif %}">
+                Pending Approval ({{ nav_pending_count }})
+            </a>
+            <a href="?status=ACCEPTED{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap {% if status_filter == 'ACCEPTED' %}bg-emerald-600 text-white{% else %}text-emerald-800 bg-emerald-50 hover:bg-emerald-100{% endif %}">
+                Accepted ({{ nav_accepted_count }})
+            </a>
+            <a href="?status=REJECTED{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap {% if status_filter == 'REJECTED' %}bg-rose-600 text-white{% else %}text-rose-800 bg-rose-50 hover:bg-rose-100{% endif %}">
+                Rejected ({{ nav_rejected_count }})
+            </a>
+            <a href="?status=ALL{% if search_query %}&q={{ search_query }}{% endif %}" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap {% if status_filter == 'ALL' %}bg-slate-900 text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                All Records
+            </a>
+        </div>
+
+        <!-- Search Input -->
+        <form method="GET" class="flex items-center space-x-2 w-full md:w-72">
+            <input type="hidden" name="status" value="{{ status_filter }}">
+            <div class="relative w-full">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search client, title, email..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            {% if search_query %}
+            <a href="?status={{ status_filter }}" class="text-xs text-slate-400 hover:text-slate-600 p-1">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Meetings List -->
+    <div class="space-y-3">
+        {% for m in meetings %}
+        <div class="bg-white rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all p-4 space-y-3">
+            
+            <!-- Top bar -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 border-b border-slate-100 pb-2.5">
+                <div class="space-y-0.5">
+                    <div class="flex items-center space-x-2">
+                        <span class="px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-slate-100 text-slate-700 rounded border border-slate-200">
+                            {{ m.booking_id }}
+                        </span>
+                        <span class="text-xs font-bold text-slate-900">{{ m.purpose }}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-400">
+                        Proposed Location / Link: <span class="text-slate-600 font-medium">{{ m.location }}</span>
+                    </div>
+                </div>
+
+                <!-- Status Badge -->
+                <div class="shrink-0">
+                    {% if m.timing_authorization == 'ACCEPTED' %}
+                    <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Accepted • Reminders Active
+                    </span>
+                    {% elif m.timing_authorization == 'REJECTED' %}
+                    <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                        Rejected • Reminders Cancelled
+                    </span>
+                    {% else %}
+                    <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                        Pending • Awaiting Approval
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Details & Actions -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <!-- Client Details & Proposed Date -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs flex-1">
+                    <div>
+                        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Client / Participant</span>
+                        <span class="font-bold text-slate-900">{{ m.client_name }}</span>
+                        <span class="text-slate-500 text-[11px] block">{{ m.client_role }}</span>
+                    </div>
+
+                    <div>
+                        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Contact Coordinates</span>
+                        <div class="text-slate-700">{{ m.client_email }}</div>
+                        <div class="text-slate-500 text-[11px]">{{ m.client_phone }}</div>
+                    </div>
+
+                    <div>
+                        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Proposed Date & Time</span>
+                        <div class="font-bold text-slate-900">{{ m.meeting_date_formatted }}</div>
+                        <div class="text-slate-500 text-[11px]">{{ m.meeting_time_formatted }} ({{ m.time_until }})</div>
+                    </div>
+                </div>
+
+                <!-- Action Controls: Accept and Reject -->
+                <div class="flex items-center space-x-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                    
+                    <!-- Accept Button -->
+                    {% if m.timing_authorization != 'ACCEPTED' %}
+                    <form action="{% url 'update_authorization' m.pk %}" method="POST" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="ACCEPTED">
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors">
+                            Accept Timing
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <!-- Reject Button -->
+                    {% if m.timing_authorization != 'REJECTED' %}
+                    <form action="{% url 'update_authorization' m.pk %}" method="POST" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="REJECTED">
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-700 text-white shadow-2xs transition-colors">
+                            Reject Timing
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <!-- Reset to Pending Button (if already accepted/rejected) -->
+                    {% if m.timing_authorization != 'PENDING' %}
+                    <form action="{% url 'update_authorization' m.pk %}" method="POST" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="PENDING">
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                            Set Pending
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <a href="{% url 'meeting_detail' m.pk %}" class="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors">
+                        Details
+                    </a>
+                </div>
+            </div>
+
+        </div>
+        {% empty %}
+        <div class="p-8 text-center bg-white rounded-xl border border-slate-200 text-slate-500 text-xs space-y-1">
+            <svg class="w-8 h-8 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p class="font-medium text-slate-700">No meetings match this authorization filter.</p>
+            <p class="text-slate-400">All meetings are appropriately authorized.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

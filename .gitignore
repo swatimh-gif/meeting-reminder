@@ -1,0 +1,32 @@
+﻿# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Neon configuration
+.neon
+
+# Local databases and backups
+db.sqlite3
+db.sqlite3.*
+*.sqlite3
+sqlite_dump_backup.json
+
+# Local executables
+neon.exe
+
+# Python temporary files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node dependencies
+node_modules/
+
+# Logs
+*.log
+
+database_exports/
+
+database_exports/

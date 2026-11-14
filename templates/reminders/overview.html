@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200">
+        <div>
+            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Overview Dashboard</h1>
+            <p class="text-xs text-slate-500 mt-0.5">
+                Monitor scheduled bookings, review pending authorizations, and track active reminders.
+            </p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                Reminders Engine Active
+            </span>
+            <form action="{% url 'sync_booking_module' %}" method="POST" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 shadow-2xs transition-colors">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <span>Sync Bookings</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+        
+        <!-- Total Scheduled (with Google Calendar Visual Icon) -->
+        <div class="col-span-2 sm:col-span-1 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-slate-500">Total Scheduled</span>
+                <!-- Google Calendar Style Visual Icon -->
+                <div class="w-7 h-7 rounded-md bg-white border border-slate-200 flex flex-col items-center justify-center shadow-2xs p-0.5" title="Google Calendar Integrated Ingestion">
+                    <div class="w-full h-1.5 bg-blue-600 rounded-t-xs"></div>
+                    <span class="text-[9px] font-extrabold text-blue-700 leading-none mt-0.5">31</span>
+                </div>
+            </div>
+            <div class="mt-2">
+                <div class="text-2xl font-bold tracking-tight text-slate-900">{{ total_meetings }}</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">External bookings</div>
+            </div>
+        </div>
+
+        <!-- Accepted Meetings -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-slate-500">Accepted</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            </div>
+            <div class="mt-2">
+                <div class="text-2xl font-bold tracking-tight text-emerald-600">{{ accepted_count }}</div>
+                <div class="text-[11px] text-emerald-700/80 mt-0.5">Reminders active</div>
+            </div>
+        </div>
+
+        <!-- Pending Authorizations -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-slate-500">Pending</span>
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            </div>
+            <div class="mt-2">
+                <div class="text-2xl font-bold tracking-tight text-amber-600">{{ pending_count }}</div>
+                <div class="text-[11px] text-amber-700/80 mt-0.5">Awaiting approval</div>
+            </div>
+        </div>
+
+        <!-- Rejected -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-slate-500">Rejected</span>
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            </div>
+            <div class="mt-2">
+                <div class="text-2xl font-bold tracking-tight text-rose-600">{{ rejected_count }}</div>
+                <div class="text-[11px] text-rose-700/80 mt-0.5">Reminders cancelled</div>
+            </div>
+        </div>
+
+        <!-- Active Reminders Scheduled -->
+        <div class="col-span-2 sm:col-span-1 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-slate-500">Active Reminders</span>
+                <div class="w-6 h-6 rounded-md bg-brand-50 text-brand-600 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                </div>
+            </div>
+            <div class="mt-2">
+                <div class="text-2xl font-bold tracking-tight text-brand-600">{{ active_reminders_count }}</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">Running in background</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SEPARATE MEETING AUTHORIZATION SECTION -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="p-4 sm:px-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                <div>
+                    <h2 class="text-sm font-bold text-slate-900 tracking-tight">Meeting Authorization</h2>
+                    <p class="text-xs text-slate-500">Meetings awaiting timing approval. Pending meetings must not trigger reminders.</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                    {{ pending_count }} Awaiting Decision
+                </span>
+                <a href="{% url 'meeting_authorization' %}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">
+                    View All &rarr;
+                </a>
+            </div>
+        </div>
+
+        {% if pending_meetings %}
+        <div class="divide-y divide-slate-100">
+            {% for m in pending_meetings %}
+            <div class="p-4 sm:px-5 hover:bg-slate-50/60 transition-colors flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                
+                <!-- Meeting Details & Client Info -->
+                <div class="space-y-1.5 flex-1 min-w-0">
+                    <div class="flex items-center space-x-2">
+                        <span class="px-1.5 py-0.5 text-[10px] font-semibold font-mono bg-slate-100 text-slate-700 rounded border border-slate-200">
+                            {{ m.booking_id }}
+                        </span>
+                        <h3 class="text-xs font-bold text-slate-900 truncate">
+                            {{ m.purpose }}
+                        </h3>
+                    </div>
+
+                    <!-- Client & Participant Info -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="font-medium text-slate-500">Client:</span>
+                            <span class="font-semibold text-slate-800">{{ m.client_name }}</span>
+                            <span class="text-slate-400">({{ m.client_email }})</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="font-medium text-slate-500">Phone:</span>
+                            <span class="text-slate-700">{{ m.client_phone }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proposed Date, Status, & Authorization Actions -->
+                <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
+                    <!-- Date & Time -->
+                    <div class="text-left sm:text-right min-w-[120px]">
+                        <div class="text-xs font-semibold text-slate-900">{{ m.meeting_date_formatted }}</div>
+                        <div class="text-[11px] text-slate-500">{{ m.meeting_time_formatted }} ({{ m.time_until }})</div>
+                    </div>
+
+                    <!-- Status Badge -->
+                    <span class="px-2 py-0.5 text-[11px] font-medium rounded-full bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
+                        Pending
+                    </span>
+
+                    <!-- Accept & Reject Action Buttons -->
+                    <div class="flex items-center space-x-1.5">
+                        <form action="{% url 'update_authorization' m.pk %}" method="POST" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="ACCEPTED">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-600 hover:bg-emerald-700 text-white transition-colors" title="Accept timing and allow reminders">
+                                Accept
+                            </button>
+                        </form>
+
+                        <form action="{% url 'update_authorization' m.pk %}" method="POST" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="REJECTED">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="px-2.5 py-1 text-xs font-semibold rounded-md bg-rose-600 hover:bg-rose-700 text-white transition-colors" title="Reject timing and cancel reminders">
+                                Reject
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-6 text-center text-slate-500 text-xs">
+            <svg class="w-6 h-6 text-emerald-500 mx-auto mb-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            No meetings currently awaiting authorization. All scheduled meetings have been processed.
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- ACCEPTED MEETINGS SECTION -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="p-4 sm:px-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <div>
+                    <h2 class="text-sm font-bold text-slate-900 tracking-tight">Accepted Meetings</h2>
+                    <p class="text-xs text-slate-500">Timing authorized. Reminders are scheduled and dispatched in the background.</p>
+                </div>
+            </div>
+            <a href="{% url 'accepted_meetings' %}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">
+                View All Accepted ({{ accepted_count }}) &rarr;
+            </a>
+        </div>
+
+        {% if accepted_meetings %}
+        
+        <!-- Desktop Table View -->
+        <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="py-2.5 px-4">Meeting Title & Purpose</th>
+                        <th class="py-2.5 px-4">Client / Participant</th>
+                        <th class="py-2.5 px-4">Contact Coordinate</th>
+                        <th class="py-2.5 px-4">Date & Time</th>
+                        <th class="py-2.5 px-4">Auth Status</th>
+                        <th class="py-2.5 px-4">Reminder Status</th>
+                        <th class="py-2.5 px-4 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for m in accepted_meetings %}
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-3 px-4">
+                            <span class="text-[10px] font-mono text-slate-400 block">{{ m.booking_id }}</span>
+                            <span class="font-semibold text-slate-900 line-clamp-1" title="{{ m.purpose }}">{{ m.purpose }}</span>
+                        </td>
+                        <td class="py-3 px-4 font-medium text-slate-800">
+                            {{ m.client_name }}
+                        </td>
+                        <td class="py-3 px-4 text-slate-600">
+                            <div class="truncate max-w-[180px]">{{ m.client_email }}</div>
+                            <div class="text-[11px] text-slate-400 font-mono">{{ m.client_phone }}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="font-medium text-slate-900">{{ m.meeting_date_formatted }}</div>
+                            <div class="text-[11px] text-slate-500">{{ m.meeting_time_formatted }}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Accepted
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="text-xs text-slate-700 font-medium flex items-center space-x-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span>{{ m.reminder_status }}</span>
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <a href="{% url 'meeting_detail' m.pk %}" class="px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:text-slate-900 rounded bg-slate-100 hover:bg-slate-200 transition-colors">
+                                Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Cards View -->
+        <div class="md:hidden divide-y divide-slate-100">
+            {% for m in accepted_meetings %}
+            <div class="p-4 space-y-2.5">
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <span class="text-[10px] font-mono text-slate-400 block">{{ m.booking_id }}</span>
+                        <h4 class="text-xs font-bold text-slate-900">{{ m.purpose }}</h4>
+                    </div>
+                    <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                        Accepted
+                    </span>
+                </div>
+
+                <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100 space-y-1 text-xs">
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Client:</span>
+                        <span class="font-semibold text-slate-900">{{ m.client_name }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Email:</span>
+                        <span class="text-slate-700 truncate max-w-[180px]">{{ m.client_email }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Phone:</span>
+                        <span class="text-slate-700">{{ m.client_phone }}</span>
+                    </div>
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                        <span class="text-slate-500">Scheduled:</span>
+                        <span class="font-medium text-slate-900">{{ m.meeting_date_formatted }} • {{ m.meeting_time_formatted }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-slate-500">Reminders:</span>
+                        <span class="text-emerald-700 font-semibold">{{ m.reminder_status }}</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <a href="{% url 'meeting_detail' m.pk %}" class="px-3 py-1 text-xs font-medium text-slate-700 bg-slate-100 rounded-md">
+                        View Details
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="p-6 text-center text-slate-500 text-xs">
+            No accepted meetings yet. Use the Meeting Authorization section to approve pending meetings.
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- UPCOMING SCHEDULED MEETINGS SECTION -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="p-4 sm:px-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+                <h2 class="text-sm font-bold text-slate-900 tracking-tight">Upcoming Scheduled Meetings</h2>
+                <p class="text-xs text-slate-500">Chronological list of upcoming sessions sorted by date and time.</p>
+            </div>
+            <a href="{% url 'meetings_list' %}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">
+                All Meetings ({{ total_meetings }}) &rarr;
+            </a>
+        </div>
+
+        {% if upcoming_meetings %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50/80 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="py-2.5 px-4">Title & Purpose</th>
+                        <th class="py-2.5 px-4">Client</th>
+                        <th class="py-2.5 px-4">Date & Time</th>
+                        <th class="py-2.5 px-4">Authorization</th>
+                        <th class="py-2.5 px-4">Reminder Status</th>
+                        <th class="py-2.5 px-4 text-right">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for m in upcoming_meetings %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-3 px-4">
+                            <span class="text-[10px] font-mono text-slate-400 block">{{ m.booking_id }}</span>
+                            <span class="font-semibold text-slate-900 block truncate max-w-xs" title="{{ m.purpose }}">{{ m.purpose }}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="font-medium text-slate-800 block">{{ m.client_name }}</span>
+                            <span class="text-[11px] text-slate-400">{{ m.client_email }}</span>
+                        </td>
+                        <td class="py-3 px-4 whitespace-nowrap">
+                            <div class="font-medium text-slate-900">{{ m.meeting_date_formatted }}</div>
+                            <div class="text-[11px] text-slate-500">{{ m.meeting_time_formatted }} ({{ m.time_until }})</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if m.timing_authorization == 'ACCEPTED' %}
+                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Accepted
+                            </span>
+                            {% elif m.timing_authorization == 'REJECTED' %}
+                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                                Rejected
+                            </span>
+                            {% else %}
+                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                Pending
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-slate-600">
+                            {{ m.reminder_status }}
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <a href="{% url 'meeting_detail' m.pk %}" class="px-2 py-1 text-[11px] font-medium text-slate-600 hover:text-slate-900 rounded bg-slate-100 hover:bg-slate-200">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center text-slate-400 text-xs space-y-2">
+            <svg class="w-8 h-8 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <p class="font-medium text-slate-600">No upcoming scheduled meetings found.</p>
+            <p class="text-slate-400 text-[11px]">Use "Sync Bookings" to fetch new meetings from the external booking module.</p>
+        </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

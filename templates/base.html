@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MeetCue{% endblock %} — Meeting Reminder &amp; Authorization System</title>
+    
+    <!-- Dark Mode Pre-init Script (prevents theme flash) -->
+    <script>
+        (function() {
+            const saved = localStorage.getItem('meetcue_theme') || localStorage.getItem('meetflow_theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
+    <!-- Tailwind CSS with darkMode class configuration -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                            950: '#1e1b4b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* Modern subtle card styling (SaaS aesthetic inspired by AppointmentHub) */
+        .saas-card {
+            background-color: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 0.875rem;
+            box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+            transition: all 0.15s ease;
+        }
+        .dark .saas-card {
+            background-color: #131d31;
+            border-color: rgba(51, 65, 85, 0.7);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+        }
+        .saas-card:hover {
+            border-color: rgba(203, 213, 225, 0.95);
+        }
+        .dark .saas-card:hover {
+            border-color: rgba(71, 85, 105, 0.9);
+        }
+    </style>
+</head>
+<body class="h-full antialiased flex flex-col md:flex-row bg-[#f8fafc] text-slate-800 dark:bg-[#0b101b] dark:text-slate-100 transition-colors duration-150">
+
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="hidden md:flex md:w-60 lg:w-64 flex-col bg-white border-r border-slate-200/90 dark:bg-[#0f172a] dark:border-slate-800/90 shrink-0 z-30 select-none shadow-[1px_0_4px_rgba(0,0,0,0.02)]">
+        
+        <!-- App Logo & Branding (MeetCue - Professional SaaS Brand Mark) -->
+        <div class="h-[58px] px-4 flex items-center border-b border-slate-100 dark:border-slate-800/80">
+            <div class="flex items-center space-x-2.5">
+                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 via-indigo-600 to-indigo-800 text-white font-bold text-[12px] tracking-wider shadow-sm ring-1 ring-white/20">
+                    MC
+                </span>
+                <div>
+                    <span class="font-bold tracking-tight text-slate-900 dark:text-white text-[15px]">Meet<span class="text-indigo-600 dark:text-indigo-400 font-semibold">Cue</span></span>
+                    <span class="block text-[10px] text-slate-400 dark:text-slate-400 font-medium -mt-0.5">Workspace &amp; Reminders</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <nav class="flex-1 px-3 py-3.5 space-y-1 overflow-y-auto">
+            
+            <!-- 1. Workspace / Dashboard -->
+            <button type="button" onclick="switchTab('overview')" data-tab-nav="overview" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium transition-all nav-item active bg-indigo-50/90 text-indigo-900 font-semibold border-l-2 border-indigo-600 shadow-2xs dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-400">
+                <span class="flex items-center space-x-2.5">
+                    <span class="text-[14px]">📊</span>
+                    <span>Workspace</span>
+                </span>
+                <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-100/70 dark:bg-indigo-900/60 px-1.5 py-0.5 rounded">Hub</span>
+            </button>
+
+            <!-- 2. All Meetings -->
+            <button type="button" onclick="switchTab('meetings')" data-tab-nav="meetings" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-50 hover:dark:bg-slate-800/60 transition-all nav-item">
+                <span class="flex items-center space-x-2.5">
+                    <span class="text-[14px]">📋</span>
+                    <span>All Meetings</span>
+                </span>
+                <span id="nav-total-badge" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                    {{ nav_total_count }}
+                </span>
+            </button>
+
+            <!-- 3. Sync Booking Module Button -->
+            <div class="pt-2 pb-1">
+                <form action="{% url 'sync_booking_module' %}" method="POST" class="w-full">
+                    {% csrf_token %}
+                    <button type="submit" title="Fetch external bookings into MeetCue" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 hover:dark:text-white hover:bg-slate-100/80 hover:dark:bg-slate-800 transition-all border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/40 group shadow-2xs">
+                        <span class="flex items-center space-x-2.5">
+                            <span class="text-[14px] transition-transform group-hover:rotate-180 duration-300">🔄</span>
+                            <span class="font-medium">Sync Bookings</span>
+                        </span>
+                        <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-900">Sync</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 4. Reminder Settings -->
+            <div class="pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                <button type="button" onclick="switchTab('settings')" data-tab-nav="settings" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:dark:text-white hover:bg-slate-50 hover:dark:bg-slate-800/60 transition-all nav-item">
+                    <span class="flex items-center space-x-2.5">
+                        <span class="text-[14px]">⚙️</span>
+                        <span>Reminder Settings</span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">15m</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Sidebar Footer: Clean minimal branding footer -->
+        <div class="p-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400 dark:text-slate-500 flex items-center justify-between">
+            <span>MeetCue v2.4</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500" title="System Active"></span>
+        </div>
+    </aside>
+
+    <!-- MAIN APP SHELL -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        
+        <!-- TOP APP BAR (Clean & Minimal Navbar) -->
+        <header class="h-[58px] bg-white border-b border-slate-200/90 dark:bg-[#0f172a] dark:border-slate-800/90 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-20 shadow-2xs">
+            
+            <!-- Mobile Menu Toggle & Brand -->
+            <div class="flex items-center space-x-2.5 md:hidden">
+                <button type="button" id="mobile-toggle-btn" class="p-1.5 rounded-md text-slate-600 dark:text-slate-300 hover:bg-slate-100 hover:dark:bg-slate-800">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-[11px]">MC</span>
+                    <span class="font-bold text-slate-900 dark:text-white text-[14px]">Meet<span class="text-indigo-600 dark:text-indigo-400 font-semibold">Cue</span></span>
+                </div>
+            </div>
+
+            <!-- Left spacing placeholder on Desktop -->
+            <div class="hidden md:flex items-center space-x-2">
+                <!-- Navigation is kept clean and simple -->
+            </div>
+
+            <!-- Top Right Action Controls: DARK MODE / LIGHT MODE TOGGLE -->
+            <div class="flex items-center space-x-2">
+                <button type="button" onclick="toggleTheme()" id="theme-toggle-btn" title="Switch Theme (Dark / Light Mode)" class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-slate-200/90 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 hover:bg-slate-100 hover:dark:bg-slate-800 hover:border-slate-300 hover:dark:border-slate-600 transition-all shadow-2xs">
+                    <!-- Sun Icon (shown in dark mode) -->
+                    <span id="theme-icon-sun" class="hidden text-[14px]">☀️</span>
+                    <!-- Moon Icon (shown in light mode) -->
+                    <span id="theme-icon-moon" class="text-[14px]">🌙</span>
+                    <span id="theme-text" class="text-[11px] font-medium">Dark Mode</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- MOBILE SLIDE-OUT MENU -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 px-4 py-3 space-y-1.5 text-[13px] shadow-sm">
+            <button type="button" onclick="switchTab('overview'); toggleMobileMenu();" class="flex items-center space-x-2 w-full text-left py-2 font-medium text-slate-700 dark:text-slate-200">
+                <span>📊</span>
+                <span>Workspace</span>
+            </button>
+            <button type="button" onclick="switchTab('meetings'); toggleMobileMenu();" class="flex items-center space-x-2 w-full text-left py-2 font-medium text-slate-700 dark:text-slate-200">
+                <span>📋</span>
+                <span>All Meetings</span>
+            </button>
+            <form action="{% url 'sync_booking_module' %}" method="POST" class="py-1">
+                {% csrf_token %}
+                <button type="submit" class="flex items-center space-x-2 w-full text-left py-2 font-medium text-blue-700 dark:text-blue-400">
+                    <span>🔄</span>
+                    <span>Sync Bookings</span>
+                </button>
+            </form>
+            <button type="button" onclick="switchTab('settings'); toggleMobileMenu();" class="flex items-center space-x-2 w-full text-left py-2 font-medium text-slate-700 dark:text-slate-200">
+                <span>⚙️</span>
+                <span>Reminder Settings</span>
+            </button>
+        </div>
+
+        <!-- TOAST ALERTS CONTAINER -->
+        <div id="toast-container" class="fixed top-16 right-4 z-50 space-y-2 max-w-sm pointer-events-none">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="pointer-events-auto px-3.5 py-2.5 rounded-lg border shadow-sm text-[12px] font-medium flex items-center justify-between transition-all bg-white border-slate-200 text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
+                <span>{{ message }}</span>
+                <button onclick="this.parentElement.remove()" class="ml-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm leading-none">&times;</button>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <!-- MAIN VIEWPORT -->
+        <main class="flex-1 p-4 sm:p-5 lg:p-6 max-w-6xl w-full">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- GLOBAL COMPACT DETAIL & AUTH LINKS MODAL -->
+    <div id="meeting-detail-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-[#131d31] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-lg w-full overflow-hidden text-[12px] text-slate-800 dark:text-slate-100">
+            <div class="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/60">
+                <div class="flex items-center space-x-2">
+                    <span class="w-6 h-6 rounded bg-indigo-600 text-white flex items-center justify-center font-bold text-[10px]">MC</span>
+                    <span id="modal-booking-id" class="font-mono text-[12px] font-semibold text-slate-700 dark:text-slate-300"></span>
+                </div>
+                <button onclick="closeMeetingModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xl font-bold leading-none">&times;</button>
+            </div>
+            <div class="p-5 space-y-3.5 max-h-[80vh] overflow-y-auto">
+                <div>
+                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Purpose / Subject</span>
+                    <h3 id="modal-purpose" class="text-[15px] font-bold text-slate-900 dark:text-white mt-0.5 leading-snug"></h3>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 py-3 border-y border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 rounded-lg p-3">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Host Participant</span>
+                        <div id="modal-host-name" class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 text-[13px]"></div>
+                        <div id="modal-host-contact" class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5"></div>
+                        <div id="modal-p1-status" class="mt-1.5"></div>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Client Participant</span>
+                        <div id="modal-client-name" class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 text-[13px]"></div>
+                        <div id="modal-client-contact" class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5"></div>
+                        <div id="modal-p2-status" class="mt-1.5"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Scheduled Date &amp; Time</span>
+                        <div id="modal-datetime" class="font-semibold text-slate-800 dark:text-slate-200 mt-0.5 text-[12px]"></div>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Overall Meeting Status</span>
+                        <div id="modal-status" class="mt-0.5"></div>
+                    </div>
+                </div>
+
+                <!-- Reschedule Info (if present) -->
+                <div id="modal-reschedule-box" class="hidden p-3 rounded-lg bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-[12px] space-y-1">
+                    <span class="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">Proposed Reschedule Timing:</span>
+                    <div id="modal-rescheduled-time" class="font-semibold text-blue-950 dark:text-blue-100"></div>
+                    <div id="modal-rescheduled-reason" class="text-blue-800 dark:text-blue-300 text-[11px]"></div>
+                </div>
+
+                <!-- Direct Links Preview -->
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Direct WhatsApp &amp; Gmail Action Links:</span>
+                    <div class="bg-slate-50 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200/80 dark:border-slate-800 space-y-2 text-[11px]">
+                        <div>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">Host (Accept Link):</span>
+                            <a id="modal-p1-accept-link" href="#" target="_blank" class="text-indigo-600 dark:text-indigo-400 hover:underline break-all ml-1 font-mono text-[10px] block mt-0.5"></a>
+                        </div>
+                        <div>
+                            <span class="font-semibold text-slate-700 dark:text-slate-300">Client (Accept Link):</span>
+                            <a id="modal-p2-accept-link" href="#" target="_blank" class="text-indigo-600 dark:text-indigo-400 hover:underline break-all ml-1 font-mono text-[10px] block mt-0.5"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Location / Meeting URL</span>
+                    <div id="modal-location" class="font-mono text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 break-all"></div>
+                </div>
+
+                <div>
+                    <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Agenda Notes</span>
+                    <div id="modal-notes" class="text-slate-600 dark:text-slate-300 text-[12px] mt-0.5 leading-relaxed"></div>
+                </div>
+            </div>
+            
+            <div class="px-5 py-3.5 bg-slate-50/80 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <form id="modal-send-auth-form" action="" method="POST" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="px-3 py-1.5 text-[11px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-colors">
+                        Dispatch WhatsApp &amp; Gmail Link
+                    </button>
+                </form>
+                <button type="button" onclick="closeMeetingModal()" class="px-3 py-1.5 text-[12px] font-medium rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 hover:dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-2xs">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ZERO-RELOAD JS TAB SWITCHER & MODAL & THEME LOGIC -->
+    <script>
+        // ------------------ THEME MANAGEMENT ------------------
+        function syncThemeUI(isDark) {
+            const sunIcon = document.getElementById('theme-icon-sun');
+            const moonIcon = document.getElementById('theme-icon-moon');
+            const themeText = document.getElementById('theme-text');
+            if (isDark) {
+                if (sunIcon) sunIcon.classList.remove('hidden');
+                if (moonIcon) moonIcon.classList.add('hidden');
+                if (themeText) themeText.textContent = 'Light Mode';
+            } else {
+                if (sunIcon) sunIcon.classList.add('hidden');
+                if (moonIcon) moonIcon.classList.remove('hidden');
+                if (themeText) themeText.textContent = 'Dark Mode';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('meetcue_theme', 'light');
+                localStorage.setItem('meetflow_theme', 'light');
+                syncThemeUI(false);
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('meetcue_theme', 'dark');
+                localStorage.setItem('meetflow_theme', 'dark');
+                syncThemeUI(true);
+            }
+        }
+
+        // ------------------ TAB SWITCHING ------------------
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+            
+            const targetPane = document.getElementById('tab-' + tabId);
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-indigo-50/90', 'text-indigo-900', 'font-semibold', 'border-l-2', 'border-indigo-600', 'shadow-2xs', 'dark:bg-indigo-950/50', 'dark:text-indigo-300', 'dark:border-indigo-400');
+                el.classList.add('text-slate-600', 'dark:text-slate-300');
+            });
+            const activeNav = document.querySelector(`[data-tab-nav="${tabId}"]`);
+            if (activeNav) {
+                activeNav.classList.add('bg-indigo-50/90', 'text-indigo-900', 'font-semibold', 'border-l-2', 'border-indigo-600', 'shadow-2xs', 'dark:bg-indigo-950/50', 'dark:text-indigo-300', 'dark:border-indigo-400');
+                activeNav.classList.remove('text-slate-600', 'dark:text-slate-300');
+            }
+
+            if (history.replaceState) {
+                history.replaceState(null, null, '#' + tabId);
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        const mobileBtn = document.getElementById('mobile-toggle-btn');
+        if (mobileBtn) {
+            mobileBtn.addEventListener('click', toggleMobileMenu);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Sync theme button label on load
+            const isDark = document.documentElement.classList.contains('dark');
+            syncThemeUI(isDark);
+
+            const hash = window.location.hash.replace('#', '');
+            const serverTab = '{{ active_tab|default:"overview" }}';
+            const tabToLoad = hash || serverTab;
+            if (['overview', 'meetings', 'settings'].includes(tabToLoad)) {
+                switchTab(tabToLoad);
+            } else {
+                switchTab('overview');
+            }
+        });
+
+        function getStatusBadge(status) {
+            if (status === 'CONFIRMED' || status === 'ACCEPTED') {
+                return '<span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800">Accepted / Confirmed</span>';
+            } else if (status === 'REJECTED') {
+                return '<span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">Rejected</span>';
+            } else if (status === 'RESCHEDULE_REQUESTED') {
+                return '<span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-blue-50 text-blue-800 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800">Reschedule Requested</span>';
+            } else {
+                return '<span class="px-2 py-0.5 text-[10px] font-semibold rounded bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800">Pending Confirmation</span>';
+            }
+        }
+
+        function openMeetingModal(meetingId) {
+            fetch(`/meetings/${meetingId}/?format=json`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('modal-booking-id').textContent = data.booking_id;
+                document.getElementById('modal-purpose').textContent = data.purpose;
+                document.getElementById('modal-client-name').textContent = data.client_name;
+                document.getElementById('modal-client-contact').textContent = `${data.client_email} • ${data.client_phone}`;
+                document.getElementById('modal-host-name').textContent = data.host_name;
+                document.getElementById('modal-host-contact').textContent = `${data.host_email} • ${data.host_phone}`;
+                document.getElementById('modal-datetime').textContent = `${data.date} at ${data.time}`;
+                document.getElementById('modal-location').textContent = data.location;
+                document.getElementById('modal-notes').textContent = data.notes;
+                
+                document.getElementById('modal-status').innerHTML = getStatusBadge(data.overall_status);
+                document.getElementById('modal-p1-status').innerHTML = getStatusBadge(data.p1_auth_status);
+                document.getElementById('modal-p2-status').innerHTML = getStatusBadge(data.p2_auth_status);
+
+                const reschedBox = document.getElementById('modal-reschedule-box');
+                if (data.rescheduled_date) {
+                    reschedBox.classList.remove('hidden');
+                    document.getElementById('modal-rescheduled-time').textContent = `${data.rescheduled_date} at ${data.rescheduled_time}`;
+                    document.getElementById('modal-rescheduled-reason').textContent = `Reason: ${data.reschedule_reason || 'Not specified'} (by ${data.rescheduled_by})`;
+                } else {
+                    reschedBox.classList.add('hidden');
+                }
+
+                // Action links preview
+                const p1LinkEl = document.getElementById('modal-p1-accept-link');
+                p1LinkEl.href = data.p1_links.accept;
+                p1LinkEl.textContent = data.p1_links.accept;
+
+                const p2LinkEl = document.getElementById('modal-p2-accept-link');
+                p2LinkEl.href = data.p2_links.accept;
+                p2LinkEl.textContent = data.p2_links.accept;
+
+                // Send Auth form action
+                document.getElementById('modal-send-auth-form').action = `/meetings/${data.id}/send-auth/`;
+
+                document.getElementById('meeting-detail-modal').classList.remove('hidden');
+            });
+        }
+
+        function closeMeetingModal() {
+            document.getElementById('meeting-detail-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

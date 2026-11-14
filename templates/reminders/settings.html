@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+
+{% block title %}Reminder Settings{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="pb-2 border-b border-slate-200">
+        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Reminder Settings & Background Services</h1>
+        <p class="text-xs text-slate-500 mt-0.5">
+            Configure background notification pathways, flexible reminder intervals (5m, 10m, 15m, 30m, 1h, 1d, custom), and participant delivery scope.
+        </p>
+    </div>
+
+    <!-- Configuration Grids -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Background Notification Services -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs space-y-4">
+            <div class="border-b border-slate-100 pb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Background Notification Services</h3>
+                <p class="text-xs text-slate-500">Reminders are delivered automatically in the background across active channels.</p>
+            </div>
+
+            <form action="{% url 'save_channels' %}" method="POST" class="space-y-4">
+                {% csrf_token %}
+
+                <div class="space-y-2.5">
+                    <!-- WhatsApp -->
+                    <label class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50/70 cursor-pointer transition-colors">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <div>
+                                <span class="text-xs font-bold text-slate-900 block">WhatsApp Notifications</span>
+                                <span class="text-[11px] text-slate-500">Direct mobile messaging with meeting join link</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="whatsapp_enabled" {% if settings.whatsapp_enabled %}checked{% endif %} class="w-4 h-4 text-brand-600 rounded">
+                    </label>
+
+                    <!-- SMS Gateway -->
+                    <label class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50/70 cursor-pointer transition-colors">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                            <div>
+                                <span class="text-xs font-bold text-slate-900 block">SMS Gateway</span>
+                                <span class="text-[11px] text-slate-500">Cellular text alerts sent directly to phone numbers</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="sms_enabled" {% if settings.sms_enabled %}checked{% endif %} class="w-4 h-4 text-brand-600 rounded">
+                    </label>
+
+                    <!-- Email -->
+                    <label class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50/70 cursor-pointer transition-colors">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                            <div>
+                                <span class="text-xs font-bold text-slate-900 block">Email Reminders</span>
+                                <span class="text-[11px] text-slate-500">Structured email alerts with agenda details</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="email_enabled" {% if settings.email_enabled %}checked{% endif %} class="w-4 h-4 text-brand-600 rounded">
+                    </label>
+
+                    <!-- Google Calendar -->
+                    <label class="flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:bg-slate-50/70 cursor-pointer transition-colors">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            <div>
+                                <span class="text-xs font-bold text-slate-900 block">Google Calendar Sync</span>
+                                <span class="text-[11px] text-slate-500">Event sync & attendee pop-up notifications</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" name="gcal_enabled" {% if settings.gcal_enabled %}checked{% endif %} class="w-4 h-4 text-brand-600 rounded">
+                    </label>
+                </div>
+
+                <!-- Recipient Targeting -->
+                <div class="p-3 rounded-lg bg-slate-50 border border-slate-200/80 space-y-2">
+                    <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">Participant Target Scope</span>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                            <input type="checkbox" name="notify_p1" {% if settings.notify_participant1 %}checked{% endif %} class="w-3.5 h-3.5 text-brand-600 rounded">
+                            <span>Participant 1 (Host)</span>
+                        </label>
+                        <label class="flex items-center space-x-1.5 cursor-pointer">
+                            <input type="checkbox" name="notify_p2" {% if settings.notify_participant2 %}checked{% endif %} class="w-3.5 h-3.5 text-brand-600 rounded">
+                            <span>Participant 2 (Client)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition-colors">
+                    Save Service Configurations
+                </button>
+            </form>
+        </div>
+
+        <!-- Flexible Reminder Timing Intervals -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs space-y-4">
+            <div class="border-b border-slate-100 pb-2">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Flexible Timing Intervals</h3>
+                <p class="text-xs text-slate-500">Presets (5m, 10m, 15m, 30m, 1h, 1d) or custom lead times.</p>
+            </div>
+
+            <!-- Active Intervals -->
+            <div class="space-y-1.5">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Active Lead Times</span>
+                
+                <div class="space-y-1.5">
+                    {% for item in intervals %}
+                    <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-brand-600"></span>
+                            <span class="font-bold text-slate-900">{{ item.label }} before meeting</span>
+                            <span class="text-[11px] text-slate-400 font-mono">({{ item.minutes }}m)</span>
+                        </div>
+                        <form action="{% url 'remove_interval' %}" method="POST" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="minutes" value="{{ item.minutes }}">
+                            <button type="submit" class="text-slate-400 hover:text-rose-600 p-0.5 text-xs font-medium" title="Remove">
+                                Remove
+                            </button>
+                        </form>
+                    </div>
+                    {% empty %}
+                    <div class="p-3 text-center text-xs text-slate-400 bg-slate-50 rounded-lg">
+                        No intervals configured.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Add Timing Interval -->
+            <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-3">
+                <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">Add Interval</span>
+
+                <!-- Presets -->
+                <form action="{% url 'add_interval' %}" method="POST" class="flex flex-wrap gap-1.5">
+                    {% csrf_token %}
+                    <input type="hidden" name="timing_type" value="preset">
+                    <button type="submit" name="preset_minutes" value="5" class="px-2 py-1 text-xs font-medium rounded bg-white border border-slate-200 hover:border-slate-400">5 min</button>
+                    <button type="submit" name="preset_minutes" value="10" class="px-2 py-1 text-xs font-medium rounded bg-white border border-slate-200 hover:border-slate-400">10 min</button>
+                    <button type="submit" name="preset_minutes" value="15" class="px-2 py-1 text-xs font-medium rounded bg-white border border-slate-200 hover:border-slate-400">15 min</button>
+                    <button type="submit" name="preset_minutes" value="30" class="px-2 py-1 text-xs font-medium rounded bg-white border border-slate-200 hover:border-slate-400">30 min</button>
+                    <button type="submit" name="preset_minutes" value="60" class="px-2 py-1 text-xs font-medium rounded bg-white border border-slate-200 hover:border-slate-400">1 hour</button>
+                    <button type="submit" name="preset_minutes" value="1440" class="px-2 py-1 text-xs font-medium rounded bg-white border border-slate-200 hover:border-slate-400">1 day</button>
+                </form>
+
+                <!-- Custom -->
+                <form action="{% url 'add_interval' %}" method="POST" class="flex items-center gap-2 pt-1 border-t border-slate-200/80">
+                    {% csrf_token %}
+                    <input type="hidden" name="timing_type" value="custom">
+                    <input type="number" name="custom_value" placeholder="e.g. 45" min="1" max="999" required class="w-16 text-xs px-2 py-1 rounded border border-slate-300 bg-white">
+                    <select name="custom_unit" class="text-xs px-2 py-1 rounded border border-slate-300 bg-white">
+                        <option value="minutes">Minutes</option>
+                        <option value="hours">Hours</option>
+                        <option value="days">Days</option>
+                    </select>
+                    <button type="submit" class="px-3 py-1 text-xs font-semibold rounded bg-brand-600 hover:bg-brand-700 text-white">
+                        Add Custom
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Notification Dispatch Audit History -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="p-4 border-b border-slate-100">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Notification Dispatch & Audit Trail</h3>
+            <p class="text-xs text-slate-500">Historical records of background reminder deliveries and cancellations.</p>
+        </div>
+
+        <div class="overflow-x-auto max-h-80">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200 sticky top-0">
+                    <tr>
+                        <th class="py-2.5 px-4">Timestamp (UTC)</th>
+                        <th class="py-2.5 px-4">Channel</th>
+                        <th class="py-2.5 px-4">Recipient</th>
+                        <th class="py-2.5 px-4">Contact</th>
+                        <th class="py-2.5 px-4">Event Headline</th>
+                        <th class="py-2.5 px-4 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for log in logs %}
+                    <tr class="hover:bg-slate-50/60 transition-colors">
+                        <td class="py-2.5 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                            {{ log.created_at|date:"Y-m-d H:i:s" }}
+                        </td>
+                        <td class="py-2.5 px-4 font-semibold text-slate-800">
+                            {{ log.channel }}
+                        </td>
+                        <td class="py-2.5 px-4">
+                            <span class="font-medium text-slate-900 block">{{ log.recipient_name }}</span>
+                            <span class="text-[10px] text-slate-400">{{ log.recipient_role }}</span>
+                        </td>
+                        <td class="py-2.5 px-4 font-mono text-slate-600 text-[11px]">
+                            {{ log.recipient_contact }}
+                        </td>
+                        <td class="py-2.5 px-4 text-slate-700 truncate max-w-xs" title="{{ log.content_preview }}">
+                            {{ log.subject_or_headline }}
+                        </td>
+                        <td class="py-2.5 px-4 text-center">
+                            {% if log.status == 'DELIVERED' %}
+                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-700">
+                                Delivered
+                            </span>
+                            {% elif log.status == 'CANCELLED' %}
+                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-rose-50 text-rose-700">
+                                Cancelled
+                            </span>
+                            {% else %}
+                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-slate-100 text-slate-600">
+                                {{ log.status }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="py-6 text-center text-slate-400 text-xs">
+                            No notifications dispatched yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

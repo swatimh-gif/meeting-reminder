@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Accepted Meetings{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-200">
+        <div>
+            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Accepted Meetings</h1>
+            <p class="text-xs text-slate-500 mt-0.5">
+                All meetings with authorized timing. Reminders are actively scheduled and processed in the background.
+            </p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                {{ meetings.count }} Accepted & Active
+            </span>
+        </div>
+    </div>
+
+    <!-- Search Toolbar -->
+    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <form method="GET" class="flex items-center space-x-2 w-full sm:w-80">
+            <div class="relative w-full">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Search client name, title, email, phone..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            {% if search_query %}
+            <a href="{% url 'accepted_meetings' %}" class="text-xs text-slate-400 hover:text-slate-600 p-1">Clear</a>
+            {% endif %}
+        </form>
+
+        <span class="text-xs text-slate-400">
+            Showing {{ meetings.count }} authorized session{{ meetings.count|pluralize }}
+        </span>
+    </div>
+
+    {% if meetings %}
+
+    <!-- Desktop Table View -->
+    <div class="hidden md:block bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4">Meeting Title & Purpose</th>
+                        <th class="py-3 px-4">Client / Participant Name</th>
+                        <th class="py-3 px-4">Email Address</th>
+                        <th class="py-3 px-4">Phone Number</th>
+                        <th class="py-3 px-4">Meeting Date</th>
+                        <th class="py-3 px-4">Meeting Time</th>
+                        <th class="py-3 px-4">Authorization</th>
+                        <th class="py-3 px-4">Reminder Status</th>
+                        <th class="py-3 px-4 text-right">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for m in meetings %}
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-3.5 px-4">
+                            <span class="text-[10px] font-mono text-slate-400 block">{{ m.booking_id }}</span>
+                            <span class="font-semibold text-slate-900 line-clamp-1" title="{{ m.purpose }}">{{ m.purpose }}</span>
+                        </td>
+                        <td class="py-3.5 px-4 font-semibold text-slate-800">
+                            {{ m.client_name }}
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600 truncate max-w-[160px]" title="{{ m.client_email }}">
+                            {{ m.client_email }}
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600 font-mono text-[11px] whitespace-nowrap">
+                            {{ m.client_phone }}
+                        </td>
+                        <td class="py-3.5 px-4 font-medium text-slate-900 whitespace-nowrap">
+                            {{ m.meeting_date_formatted }}
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-600 whitespace-nowrap">
+                            {{ m.meeting_time_formatted }}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Accepted
+                            </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-700 font-medium">
+                            {{ m.reminder_status }}
+                        </td>
+                        <td class="py-3.5 px-4 text-right">
+                            <a href="{% url 'meeting_detail' m.pk %}" class="px-2.5 py-1 text-[11px] font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded transition-colors">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Mobile Responsive Cards View -->
+    <div class="md:hidden space-y-3">
+        {% for m in meetings %}
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+            <div class="flex items-start justify-between gap-2 border-b border-slate-100 pb-2">
+                <div>
+                    <span class="text-[10px] font-mono text-slate-400 block">{{ m.booking_id }}</span>
+                    <h3 class="text-xs font-bold text-slate-900">{{ m.purpose }}</h3>
+                </div>
+                <span class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                    Accepted
+                </span>
+            </div>
+
+            <div class="space-y-1.5 text-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">Client:</span>
+                    <span class="font-bold text-slate-900">{{ m.client_name }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">Email:</span>
+                    <span class="text-slate-700 truncate max-w-[200px]">{{ m.client_email }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">Phone:</span>
+                    <span class="text-slate-700">{{ m.client_phone }}</span>
+                </div>
+                <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                    <span class="text-slate-400">Meeting Date:</span>
+                    <span class="font-medium text-slate-900">{{ m.meeting_date_formatted }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">Meeting Time:</span>
+                    <span class="font-medium text-slate-900">{{ m.meeting_time_formatted }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">Reminder Status:</span>
+                    <span class="font-semibold text-emerald-700">{{ m.reminder_status }}</span>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-1">
+                <a href="{% url 'meeting_detail' m.pk %}" class="px-3 py-1 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md">
+                    Inspect Details
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="p-10 text-center bg-white rounded-xl border border-slate-200 text-slate-500 text-xs space-y-1">
+        <svg class="w-8 h-8 text-slate-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <p class="font-medium text-slate-700">No accepted meetings found.</p>
+        <p class="text-slate-400">Authorizations will appear here as soon as meetings are marked Accepted.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

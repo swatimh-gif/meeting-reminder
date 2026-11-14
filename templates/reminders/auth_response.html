@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} — MeetCue</title>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('meetcue_theme') || localStorage.getItem('meetflow_theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; line-height: 1.45; }
+    </style>
+</head>
+<body class="h-full flex items-center justify-center p-4 bg-[#f8fafc] text-slate-800 dark:bg-[#0b101b] dark:text-slate-100 transition-colors">
+
+    <div class="max-w-md w-full bg-white dark:bg-[#131d31] rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xl p-6 sm:p-7 space-y-4">
+        
+        <!-- Header / Logo -->
+        <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-[11px] shadow-sm">
+                    MC
+                </span>
+                <span class="font-bold text-slate-900 dark:text-white text-[15px]">Meet<span class="text-indigo-600 dark:text-indigo-400 font-semibold">Cue</span></span>
+            </div>
+            <span class="text-[11px] font-mono text-slate-400 dark:text-slate-500">Direct Auth</span>
+        </div>
+
+        <!-- Status Icon & Title -->
+        <div class="pt-2 text-center space-y-2">
+            {% if action == 'ACCEPT' %}
+                <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800 text-[20px]">
+                    ✓
+                </div>
+                <h1 class="text-[18px] font-bold text-slate-900 dark:text-white">{{ title }}</h1>
+            {% elif action == 'REJECT' %}
+                <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto border border-rose-200 dark:border-rose-800 text-[20px]">
+                    ✕
+                </div>
+                <h1 class="text-[18px] font-bold text-slate-900 dark:text-white">{{ title }}</h1>
+            {% else %}
+                <div class="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto border border-blue-200 dark:border-blue-800 text-[20px]">
+                    🗓
+                </div>
+                <h1 class="text-[18px] font-bold text-slate-900 dark:text-white">{{ title }}</h1>
+            {% endif %}
+
+            <p class="text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed">{{ message }}</p>
+        </div>
+
+        <!-- Meeting Summary Box -->
+        {% if meeting %}
+        <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3.5 border border-slate-200/70 dark:border-slate-800 text-[12px] space-y-2 mt-3">
+            <div class="flex justify-between border-b border-slate-200/50 dark:border-slate-800 pb-1.5">
+                <span class="text-slate-400 dark:text-slate-500">Meeting:</span>
+                <span class="font-medium text-slate-800 dark:text-slate-200 text-right">{{ meeting.purpose }}</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-200/50 dark:border-slate-800 pb-1.5">
+                <span class="text-slate-400 dark:text-slate-500">Client:</span>
+                <span class="font-medium text-slate-800 dark:text-slate-200">{{ meeting.client_name }}</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-200/50 dark:border-slate-800 pb-1.5">
+                <span class="text-slate-400 dark:text-slate-500">Host:</span>
+                <span class="font-medium text-slate-800 dark:text-slate-200">{{ meeting.p1_name }}</span>
+            </div>
+            <div class="flex justify-between border-b border-slate-200/50 dark:border-slate-800 pb-1.5">
+                <span class="text-slate-400 dark:text-slate-500">Date &amp; Time:</span>
+                <span class="font-medium text-slate-800 dark:text-slate-200">{{ meeting.meeting_date_formatted }} at {{ meeting.meeting_time_formatted }}</span>
+            </div>
+            <div class="flex justify-between items-center pt-0.5">
+                <span class="text-slate-400 dark:text-slate-500">Overall Status:</span>
+                <div>
+                    {% if meeting.overall_status == 'CONFIRMED' %}
+                    <span class="px-2 py-0.5 text-[11px] font-medium rounded bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800">Confirmed (Reminders Active)</span>
+                    {% elif meeting.overall_status == 'REJECTED' %}
+                    <span class="px-2 py-0.5 text-[11px] font-medium rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">Rejected (Cancelled)</span>
+                    {% elif meeting.overall_status == 'RESCHEDULE_REQUESTED' %}
+                    <span class="px-2 py-0.5 text-[11px] font-medium rounded bg-blue-50 text-blue-800 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800">Reschedule Requested</span>
+                    {% else %}
+                    <span class="px-2 py-0.5 text-[11px] font-medium rounded bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800">Pending Other Participant</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="pt-2 text-center text-[11px] text-slate-400 dark:text-slate-500">
+            Authorization links are delivered directly through WhatsApp and Gmail.
+        </div>
+
+    </div>
+
+</body>
+</html>
